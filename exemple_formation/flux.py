@@ -1,7 +1,7 @@
 import os
 import time
 from argparse import ArgumentParser
-from multiprocessing import Process
+from concurrent.futures import ProcessPoolExecutor
 
 import feedparser
 from sqlalchemy import create_engine
@@ -27,17 +27,17 @@ def main():
 
         print(f"Processus principal: {os.getpid()}")
 
-        processes = []
+        pool = ProcessPoolExecutor(max_workers=8)
+
+        # Lancer les processus
+        titres = {}
         for url in args.urls:
-            # On lance un thread par URL
-            t = ProcessAdder(Session, url)
-            t.start()
+            future = pool.submit(titre_flux, url)
+            titres[url] = future
 
-            processes.append(t)
-
-        # On attend que tous les processes aient fini
-        for p in processes:
-            p.join()
+        for url, future in titres.items():
+            titre = future.result()
+            ajouter_un_flux(Session, url, titre)
 
         print(time.time() - initial)
 
@@ -60,20 +60,8 @@ def parse_args():
     return parser.parse_args()
 
 
-class ProcessAdder(Process):
-    def __init__(self, Session, url):
-        super().__init__()
-        self.db_session = Session()
-        self.url = url
-
-    def run(self):
-        # le point d'entrée du thread
-        print(f"Démarrage du processus: {os.getpid()} ({os.getppid()})")
-        ajouter_un_flux(self.db_session, self.url)
-
-
-def ajouter_un_flux(db_session, url):
-    titre = titre_flux(url)
+def ajouter_un_flux(Session, url, titre):
+    db_session = Session()
     flux = FluxRSS(url=url, nom=titre)
     try:
         db_session.add(flux)
@@ -83,6 +71,7 @@ def ajouter_un_flux(db_session, url):
 
 
 def titre_flux(url):
+    print(f"Processus worker: {os.getpid()}")
     d = feedparser.parse(url)
     return d["feed"]["title"]
 
