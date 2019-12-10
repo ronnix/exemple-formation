@@ -8,7 +8,7 @@ authors = ["Ronan Amicel <ronan.amicel@gmail.com>"]
 flux = "exemple_formation.flux:main"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.6"
 requests = "^2.22"
 sqlalchemy = "^1.3"
 feedparser = "^5.2"
