@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+import feedparser
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
@@ -42,14 +43,20 @@ def parse_args():
 
 
 def ajouter_un_flux(db_session, url):
+    titre = titre_flux(url)
+    flux = FluxRSS(url=url, nom=titre)
     try:
-        flux = FluxRSS(url=url)
         db_session.add(flux)
         db_session.commit()
     except IntegrityError:
         print("Ce flux existe déjà")
 
 
+def titre_flux(url):
+    d = feedparser.parse(url)
+    return d["feed"]["title"]
+
+
 def lister_les_flux(db_session):
     for flux in db_session.query(FluxRSS):
-        print(flux.url)
+        print(flux.nom, flux.url)
