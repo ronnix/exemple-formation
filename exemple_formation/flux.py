@@ -26,12 +26,10 @@ def main():
     if args.cmd == "add":
         initial = time.time()
 
-        #titres = await titres_flux(args.urls)
         titres = asyncio.run(titres_flux(args.urls))
-        print(titres)
 
-        #for url, titre in zip(urls, pool.map(titre_flux, urls)):
-        #    ajouter_un_flux(Session, url, titre)
+        for url, titre in titres.items():
+            ajouter_un_flux(Session, url, titre)
 
         print(time.time() - initial)
 
