@@ -1,7 +1,8 @@
 import os
 import time
 from argparse import ArgumentParser
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from threading import get_ident
 
 import feedparser
 from sqlalchemy import create_engine
@@ -25,11 +26,11 @@ def main():
     if args.cmd == "add":
         initial = time.time()
 
-        print(f"Processus principal: {os.getpid()}")
+        print(f"Thread principal: {os.getpid()} / {hex(get_ident())}")
 
-        pool = ProcessPoolExecutor(max_workers=8)
+        pool = ThreadPoolExecutor(max_workers=8)
 
-        # Lancer les processus
+        # Lancer les threads
         titres = {}
         for url in args.urls:
             future = pool.submit(titre_flux, url)
@@ -71,7 +72,7 @@ def ajouter_un_flux(Session, url, titre):
 
 
 def titre_flux(url):
-    print(f"Processus worker: {os.getpid()}")
+    print(f"Thread worker: {os.getpid()} / {hex(get_ident())}")
     d = feedparser.parse(url)
     return d["feed"]["title"]
 
