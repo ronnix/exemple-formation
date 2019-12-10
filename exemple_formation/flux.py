@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from exemple_formation.models import Base, FluxRSS
@@ -29,7 +30,11 @@ def parse_args():
 
 
 def ajouter_un_flux(db_session, url):
-    flux = FluxRSS(url=url)
-    db_session.add(flux)
-    db_session.commit()
+    try:
+        flux = FluxRSS(url=url)
+        db_session.add(flux)
+        db_session.commit()
+    except IntegrityError:
+        print("Ce flux existe déjà")
+
 
