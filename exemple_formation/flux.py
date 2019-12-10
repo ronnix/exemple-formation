@@ -1,3 +1,4 @@
+import time
 from argparse import ArgumentParser
 
 import feedparser
@@ -22,7 +23,10 @@ def main():
     args = parse_args()
 
     if args.cmd == "add":
-        ajouter_un_flux(db_session, args.url)
+        print(time.time())
+        for url in args.urls:
+            ajouter_un_flux(db_session, url)
+            print(time.time())
     elif args.cmd == "list":
         lister_les_flux(db_session)
 
@@ -33,7 +37,7 @@ def parse_args():
     subparsers = parser.add_subparsers()
 
     cmd_add = subparsers.add_parser("add")
-    cmd_add.add_argument("url")
+    cmd_add.add_argument("urls", nargs="+")
     cmd_add.set_defaults(cmd="add")
 
     cmd_list = subparsers.add_parser("list")
