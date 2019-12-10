@@ -20,12 +20,24 @@ def main():
 
     args = parse_args()
 
-    ajouter_un_flux(db_session, args.url)
+    if args.cmd == "add":
+        ajouter_un_flux(db_session, args.url)
+    elif args.cmd == "list":
+        lister_les_flux(db_session)
 
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("url")
+   
+    subparsers = parser.add_subparsers()
+
+    cmd_add = subparsers.add_parser("add")
+    cmd_add.add_argument("url")
+    cmd_add.set_defaults(cmd="add")
+
+    cmd_list = subparsers.add_parser("list")
+    cmd_list.set_defaults(cmd="list")
+
     return parser.parse_args()
 
 
@@ -38,3 +50,6 @@ def ajouter_un_flux(db_session, url):
         print("Ce flux existe déjà")
 
 
+def lister_les_flux(db_session):
+    for flux in db_session.query(FluxRSS):
+        print(flux.url)
