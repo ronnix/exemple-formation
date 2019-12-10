@@ -1,5 +1,6 @@
 import time
 from argparse import ArgumentParser
+from threading import Thread
 
 import feedparser
 from sqlalchemy import create_engine
@@ -18,17 +19,27 @@ def main():
     
     Session = sessionmaker(bind=engine)
 
-    db_session = Session()
-
     args = parse_args()
 
     if args.cmd == "add":
-        print(time.time())
+        initial = time.time()
+
+        threads = []
         for url in args.urls:
-            ajouter_un_flux(db_session, url)
-            print(time.time())
+            # On lance un thread par URL
+            t = ThreadAdder(Session, url)
+            t.start()
+
+            threads.append(t)
+
+        # On attend que tous les threads aient fini
+        for t in threads:
+            t.join()
+
+        print(time.time() - initial)
+
     elif args.cmd == "list":
-        lister_les_flux(db_session)
+        lister_les_flux(Session)
 
 
 def parse_args():
@@ -46,6 +57,17 @@ def parse_args():
     return parser.parse_args()
 
 
+class ThreadAdder(Thread):
+    def __init__(self, Session, url):
+        super().__init__()
+        self.db_session = Session()
+        self.url = url
+
+    def run(self):
+        # le point d'entrée du thread
+        ajouter_un_flux(self.db_session, self.url)
+
+
 def ajouter_un_flux(db_session, url):
     titre = titre_flux(url)
     flux = FluxRSS(url=url, nom=titre)
@@ -61,6 +83,7 @@ def titre_flux(url):
     return d["feed"]["title"]
 
 
-def lister_les_flux(db_session):
+def lister_les_flux(Session):
+    db_session = Session()
     for flux in db_session.query(FluxRSS):
         print(flux.nom, flux.url)
