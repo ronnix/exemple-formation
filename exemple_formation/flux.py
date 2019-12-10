@@ -1,9 +1,9 @@
+import asyncio
 import os
 import time
 from argparse import ArgumentParser
-from concurrent.futures import ThreadPoolExecutor
-from threading import get_ident
 
+import aiohttp
 import feedparser
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
@@ -26,13 +26,12 @@ def main():
     if args.cmd == "add":
         initial = time.time()
 
-        print(f"Thread principal: {os.getpid()} / {hex(get_ident())}")
+        #titres = await titres_flux(args.urls)
+        titres = asyncio.run(titres_flux(args.urls))
+        print(titres)
 
-        urls = args.urls
-
-        with ThreadPoolExecutor(max_workers=8) as pool:
-            for url, titre in zip(urls, pool.map(titre_flux, urls)):
-                ajouter_un_flux(Session, url, titre)
+        #for url, titre in zip(urls, pool.map(titre_flux, urls)):
+        #    ajouter_un_flux(Session, url, titre)
 
         print(time.time() - initial)
 
@@ -65,10 +64,23 @@ def ajouter_un_flux(Session, url, titre):
         print("Ce flux existe déjà")
 
 
-def titre_flux(url):
-    print(f"Thread worker: {os.getpid()} / {hex(get_ident())}")
-    d = feedparser.parse(url)
+async def titres_flux(urls):
+    titres = {}
+    for url in urls:
+        titres[url] = await titre_flux(url)
+    return titres
+
+
+async def titre_flux(url):
+    contenu = await récupération(url)
+    d = feedparser.parse(contenu)
     return d["feed"]["title"]
+
+
+async def récupération(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.text()
 
 
 def lister_les_flux(Session):
