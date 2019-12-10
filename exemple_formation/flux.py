@@ -28,17 +28,11 @@ def main():
 
         print(f"Thread principal: {os.getpid()} / {hex(get_ident())}")
 
-        pool = ThreadPoolExecutor(max_workers=8)
+        urls = args.urls
 
-        # Lancer les threads
-        titres = {}
-        for url in args.urls:
-            future = pool.submit(titre_flux, url)
-            titres[url] = future
-
-        for url, future in titres.items():
-            titre = future.result()
-            ajouter_un_flux(Session, url, titre)
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            for url, titre in zip(urls, pool.map(titre_flux, urls)):
+                ajouter_un_flux(Session, url, titre)
 
         print(time.time() - initial)
 
