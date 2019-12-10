@@ -1,6 +1,7 @@
+import os
 import time
 from argparse import ArgumentParser
-from threading import Thread
+from multiprocessing import Process
 
 import feedparser
 from sqlalchemy import create_engine
@@ -24,17 +25,19 @@ def main():
     if args.cmd == "add":
         initial = time.time()
 
-        threads = []
+        print(f"Processus principal: {os.getpid()}")
+
+        processes = []
         for url in args.urls:
             # On lance un thread par URL
-            t = ThreadAdder(Session, url)
+            t = ProcessAdder(Session, url)
             t.start()
 
-            threads.append(t)
+            processes.append(t)
 
-        # On attend que tous les threads aient fini
-        for t in threads:
-            t.join()
+        # On attend que tous les processes aient fini
+        for p in processes:
+            p.join()
 
         print(time.time() - initial)
 
@@ -57,7 +60,7 @@ def parse_args():
     return parser.parse_args()
 
 
-class ThreadAdder(Thread):
+class ProcessAdder(Process):
     def __init__(self, Session, url):
         super().__init__()
         self.db_session = Session()
@@ -65,6 +68,7 @@ class ThreadAdder(Thread):
 
     def run(self):
         # le point d'entrée du thread
+        print(f"Démarrage du processus: {os.getpid()} ({os.getppid()})")
         ajouter_un_flux(self.db_session, self.url)
 
 
