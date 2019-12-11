@@ -13,7 +13,9 @@ Modéliser des flux RSS.
     - url
 """
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
+from sqlalchemy.orm import sessionmaker
+
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -38,3 +40,9 @@ class Article(Base):
 
     flux_url = Column(String, ForeignKey("flux_rss.url"))
 
+
+def init_db(filename):
+    engine = create_engine(f"sqlite:///{filename}")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    return Session

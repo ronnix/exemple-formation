@@ -13,15 +13,30 @@ Interface graphique wxPython
 import wx
 import wx.html
 
-def main():
-    app = wx.App()
+from exemple_formation.models import FluxRSS, init_db
 
+
+def main():
+    Session = init_db("exemple.db")
+    db_session = Session()
+
+    titres_flux = [
+        flux.nom
+        for flux in db_session.query(FluxRSS).order_by("nom")
+    ]
+
+    app = wx.App()
+    fenêtre = create_main_window(titres_flux)
+    app.MainLoop()
+
+
+def create_main_window(titres_flux):
     fenêtre = wx.Frame(None, title="Lecteur RSS")
 
     conteneur = wx.Panel(fenêtre)
 
     # A gauche, la liste des flux
-    liste_flux = wx.ListBox(conteneur, choices=["Aaaaa", "Bbbbb", "Cccccc"])
+    liste_flux = wx.ListBox(conteneur, choices=titres_flux)
 
     partie_droite = wx.Panel(conteneur)
 
@@ -44,4 +59,5 @@ def main():
     conteneur.SetSizer(sizer)
 
     fenêtre.Show()
-    app.MainLoop()
+
+    return fenêtre

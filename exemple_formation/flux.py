@@ -5,21 +5,16 @@ from argparse import ArgumentParser
 
 import aiohttp
 import feedparser
-from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker
 
-from exemple_formation.models import Base, FluxRSS
+from exemple_formation.models import FluxRSS, init_db
 
 
 DB_PATH = "exemple.db"
 
 
 def main():
-    engine = create_engine(f"sqlite:///{DB_PATH}") 
-    Base.metadata.create_all(engine)
-    
-    Session = sessionmaker(bind=engine)
+    Session = init_db(DB_PATH)
 
     args = parse_args()
 
