@@ -7,7 +7,7 @@ import aiohttp
 import feedparser
 from sqlalchemy.exc import IntegrityError
 
-from exemple_formation.models import FluxRSS, init_db
+from exemple_formation.models import Article, FluxRSS, init_db
 
 
 DB_PATH = "exemple.db"
@@ -21,10 +21,12 @@ def main():
     if args.cmd == "add":
         initial = time.time()
 
-        titres = asyncio.run(titres_flux(args.urls))
+        feeds = asyncio.run(parse_all_flux(args.urls))
 
-        for url, titre in titres.items():
-            ajouter_un_flux(Session, url, titre)
+        for url, feed in feeds.items():
+            ajouter_un_flux(Session, url, titre_flux(feed))
+            for entry in feed["entries"]:
+                ajouter_un_article(Session, entry, url)
 
         print(time.time() - initial)
 
@@ -57,16 +59,36 @@ def ajouter_un_flux(Session, url, titre):
         print("Ce flux existe déjà")
 
 
-async def titres_flux(urls):
-    titres = {}
+def ajouter_un_article(Session, entry, flux_url):
+    db_session = Session()
+    article = Article(
+        date=entry.published,
+        titre=entry.title,
+        auteur=getattr(entry, "author", None),
+        contenu=entry.description,
+        article_url=entry.link,
+        flux_url=flux_url,
+    )
+    try:
+        db_session.add(article)
+        db_session.commit()
+    except IntegrityError:
+        print("Cet article existe déjà")
+
+
+async def parse_all_flux(urls):
+    parsed = {}
     for url in urls:
-        titres[url] = await titre_flux(url)
-    return titres
+        parsed[url] = await parse_flux(url)
+    return parsed
 
 
-async def titre_flux(url):
+async def parse_flux(url):
     contenu = await récupération(url)
-    d = feedparser.parse(contenu)
+    return feedparser.parse(contenu)
+
+
+def titre_flux(d):
     return d["feed"]["title"]
 
 

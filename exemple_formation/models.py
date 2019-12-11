@@ -14,7 +14,7 @@ Modéliser des flux RSS.
 """
 
 from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -39,6 +39,7 @@ class Article(Base):
     article_url = Column(String)
 
     flux_url = Column(String, ForeignKey("flux_rss.url"))
+    flux = relationship(FluxRSS, backref="articles")
 
 
 def init_db(filename):
