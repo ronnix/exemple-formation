@@ -42,8 +42,8 @@ class Article(Base):
     flux = relationship(FluxRSS, backref="articles")
 
 
-def init_db(filename):
-    engine = create_engine(f"sqlite:///{filename}")
+def init_db(db_url):
+    engine = create_engine(db_url)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     return Session

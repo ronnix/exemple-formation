@@ -10,6 +10,7 @@ Interface graphique wxPython
     - "Hollywood principle" : "don't call us, we'll call you"
 """
 
+import os
 import wx
 import wx.html
 
@@ -17,7 +18,9 @@ from exemple_formation.models import Article, FluxRSS, init_db
 
 
 def main():
-    Session = init_db("exemple.db")
+    filename = os.path.join(os.getenv("APPDATA"), "flux.db")
+    db_url = f"sqlite:///{filename}"
+    Session = init_db(db_url)
     db_session = Session()
 
     flux = db_session.query(FluxRSS).order_by("nom")

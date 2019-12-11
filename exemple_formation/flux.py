@@ -10,11 +10,11 @@ from sqlalchemy.exc import IntegrityError
 from exemple_formation.models import Article, FluxRSS, init_db
 
 
-DB_PATH = "exemple.db"
+DB_URL = "sqlite:///exemple.db"
 
 
 def main():
-    Session = init_db(DB_PATH)
+    Session = init_db(DB_URL)
 
     args = parse_args()
 
