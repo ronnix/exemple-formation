@@ -1,0 +1,8 @@
+{% extends "_base.html" %}
+
+{% block body %}
+    <h2>{{ article.titre }}</h2>
+    {{ article.contenu | safe }}  {# Mauvaise idée sans nettoyer le HTML #}
+    <hr>
+    <a href="{{ article.article_url }}">Article complet</a>
+{% endblock %}

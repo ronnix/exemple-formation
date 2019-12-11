@@ -1,11 +1,12 @@
-<html>
-    <head><title>Lecteur RSS</title></head>
-    <body>
-        <h1>Liste des flux</h1>
-        <ul>
-        {% for feed in feeds %}
-            <li>{{ feed.nom }}</li>
-        {% endfor %}
-        </ul>
-    </body>
-</html>
+{% extends "_base.html" %}
+
+{% block body %}
+<h2>Liste des flux</h2>
+    <ul>
+    {% for feed in feeds %}
+        <li>
+            <a href="/feed/{{ feed.url | urlencode | replace("/", "%2f") }}">{{ feed.nom }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}

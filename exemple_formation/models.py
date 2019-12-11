@@ -14,7 +14,7 @@ Modéliser des flux RSS.
 """
 
 from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -45,5 +45,5 @@ class Article(Base):
 def init_db(db_url):
     engine = create_engine(db_url)
     Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
+    Session = scoped_session(sessionmaker(bind=engine))
     return Session

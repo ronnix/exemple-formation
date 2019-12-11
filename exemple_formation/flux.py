@@ -65,7 +65,7 @@ def ajouter_un_article(Session, entry, flux_url):
         date=entry.published,
         titre=entry.title,
         auteur=getattr(entry, "author", None),
-        contenu=entry.description,
+        contenu=entry.description,  # TODO: clean HTML
         article_url=entry.link,
         flux_url=flux_url,
     )
