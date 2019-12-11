@@ -13,7 +13,7 @@ Interface graphique wxPython
 import wx
 import wx.html
 
-from exemple_formation.models import FluxRSS, init_db
+from exemple_formation.models import Article, FluxRSS, init_db
 
 
 def main():
@@ -23,19 +23,21 @@ def main():
     flux = db_session.query(FluxRSS).order_by("nom")
 
     app = wx.App()
-    fenêtre = create_main_window(flux)
+    fenêtre = create_main_window(db_session, flux)
     app.MainLoop()
 
 
-def create_main_window(titres_flux):
-    fenêtre = MainWindow(titres_flux)
+def create_main_window(db_session, titres_flux):
+    fenêtre = MainWindow(db_session, titres_flux)
     fenêtre.Show()
     return fenêtre
 
 
 class MainWindow(wx.Frame):
-    def __init__(self, flux):
+    def __init__(self, db_session, flux):
         super().__init__(None, title="Lecteur RSS")
+
+        self.db_session = db_session
 
         conteneur = wx.Panel(self)
 
@@ -50,7 +52,7 @@ class MainWindow(wx.Frame):
         partie_droite = wx.Panel(conteneur)
 
         # À droite, en haut, la liste des articles
-        self.liste_articles = ArticleList(partie_droite)
+        self.liste_articles = ArticleList(partie_droite, on_select=self.selection_article)
 
         # À droite, en bas, le contenu de l'article
         self.contenu_article = ContenuArticle(partie_droite)
@@ -69,8 +71,14 @@ class MainWindow(wx.Frame):
 
     def selection_flux(self, event):
         flux = self.index_flux[event.GetSelection()]
+        self.contenu_article.clear()
         self.liste_articles.clear()
         self.liste_articles.add(flux.articles)
+
+    def selection_article(self, event):
+        article_id = event.GetData()
+        article = self.db_session.query(Article).get(article_id)
+        self.contenu_article.SetPage(article.contenu)
 
 
 class FeedList(wx.ListBox):
@@ -81,8 +89,10 @@ class FeedList(wx.ListBox):
 
 
 class ArticleList(wx.ListCtrl):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, style=wx.LC_REPORT, **kwargs)
+    def __init__(self, *args, on_select=None, **kwargs):
+        super().__init__(*args, style=wx.LC_REPORT | wx.LC_SINGLE_SEL, **kwargs)
+        if on_select is not None:
+            self.Bind(wx.EVT_LIST_ITEM_SELECTED, on_select)
         self.clear()
 
     def clear(self):
@@ -94,9 +104,11 @@ class ArticleList(wx.ListCtrl):
         self.AppendColumn("Date")
 
     def add(self, articles):
-        for article in articles:
+        for index, article in enumerate(articles):
             self.Append((article.titre, article.date))
+            self.SetItemData(index, article.id)
 
 
 class ContenuArticle(wx.html.HtmlWindow):
-    pass
+    def clear(self):
+        self.SetPage("")
