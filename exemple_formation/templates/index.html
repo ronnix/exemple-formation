@@ -1,0 +1,11 @@
+<html>
+    <head><title>Lecteur RSS</title></head>
+    <body>
+        <h1>Liste des flux</h1>
+        <ul>
+        {% for feed in feeds %}
+            <li>{{ feed.nom }}</li>
+        {% endfor %}
+        </ul>
+    </body>
+</html>
